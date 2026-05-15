@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PixelNest</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="desktop-stage" aria-label="PixelNest desktop pet preview">
+      <section id="pet" class="pet" aria-label="Pixel black cat" role="button" tabindex="0">
+        <div id="bubble" class="speech-bubble" aria-live="polite">Meow</div>
+
+        <div class="cat-sprite" aria-hidden="true"></div>
+      </section>
+
+      <nav id="pet-menu" class="pet-menu" aria-label="Cat menu" hidden>
+        <button id="toggle-chase" type="button" role="menuitemcheckbox" aria-checked="false">
+          <span class="checkmark" aria-hidden="true"></span>
+          Random chase
+        </button>
+        <button id="start-chase" type="button" role="menuitem">Chase now</button>
+        <button id="sleep-now" type="button" role="menuitem">Sleep now</button>
+      </nav>
+    </main>
+
+    <script src="./app.js" type="module"></script>
+  </body>
+</html>

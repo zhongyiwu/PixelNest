@@ -1,0 +1,40 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "PixelNest",
+  "version": "0.1.0",
+  "identifier": "com.pixelnest.pet",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://127.0.0.1:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "macOSPrivateApi": true,
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "title": "PixelNest",
+        "label": "main",
+        "width": 220,
+        "height": 220,
+        "resizable": false,
+        "decorations": false,
+        "transparent": true,
+        "backgroundColor": "#00000000",
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "shadow": false,
+        "center": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": ["icons/icon.png"]
+  }
+}

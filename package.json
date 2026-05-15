@@ -1,0 +1,21 @@
+{
+  "name": "pixel-nest",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "generate:sprites": "node scripts/create-cat-spritesheet.js",
+    "dev": "vite --host 127.0.0.1 --port 1420",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "serve": "node server.js",
+    "tauri": "tauri"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.0.0"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.0.0",
+    "vite": "^7.0.0"
+  }
+}
