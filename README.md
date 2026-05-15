@@ -20,26 +20,62 @@ PixelNest is a tiny pixel-art desktop pet — a draggable black cat that blinks,
 
 ### 1. Prerequisites
 
-Whether you are on macOS or Windows, install these first:
+You'll need three things on any platform: **Node.js**, **Rust**, and the **platform's native build tools**. Pick the section for your OS below — every command can be copy-pasted as is.
 
-| Tool | Version | Notes |
-| --- | --- | --- |
-| **Node.js** | ≥ 18 LTS | For the front-end and build scripts. [nvm](https://github.com/nvm-sh/nvm) / [nvm-windows](https://github.com/coreybutler/nvm-windows) recommended. |
-| **Rust** | Latest stable | Required by the Tauri shell. Install via [rustup](https://rustup.rs/). |
-| **Platform native deps** | See below | macOS and Windows each need a few system-level pieces. |
-
-#### macOS
+#### 🍎 macOS
 
 ```bash
+# 1. Homebrew (skip if you already have it)
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# 2. Node.js (LTS)
+brew install node
+
+# 3. Rust (via rustup)
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+# 4. Xcode Command Line Tools (Tauri needs them to compile)
 xcode-select --install
 ```
 
-That installs the Xcode Command Line Tools, which Tauri uses to compile.
+After installation, restart your terminal so the new `cargo` and `node` commands are on your `PATH`. Verify with `node -v` and `cargo -V`.
 
-#### Windows
+#### 🪟 Windows
 
-1. Install **Microsoft Visual Studio C++ Build Tools** (check "Desktop development with C++").
-2. Install the **WebView2 Runtime** (bundled with Windows 11; Windows 10 users can grab it from [Microsoft](https://developer.microsoft.com/microsoft-edge/webview2/)).
+Run these in **PowerShell** (you don't need admin for most of them):
+
+```powershell
+# 1. Node.js (LTS)
+winget install OpenJS.NodeJS.LTS
+
+# 2. Rust: download and run rustup-init.exe from https://rustup.rs
+#    Choose option 1 (default installation) when prompted.
+
+# 3. Microsoft Visual C++ Build Tools
+#    Download from: https://visualstudio.microsoft.com/visual-cpp-build-tools/
+#    In the installer, check "Desktop development with C++".
+
+# 4. WebView2 Runtime
+#    Windows 11 already has it. On Windows 10, grab the Evergreen installer from:
+#    https://developer.microsoft.com/microsoft-edge/webview2/
+```
+
+Close and reopen PowerShell after installing Rust and Node, then verify with `node -v` and `cargo -V`.
+
+#### 🐧 Linux (Ubuntu / Debian)
+
+```bash
+# 1. Node.js (LTS, via NodeSource — apt's default is usually too old)
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install -y nodejs
+
+# 2. Rust
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+# 3. Tauri system dependencies
+sudo apt install -y libwebkit2gtk-4.1-dev build-essential curl wget file \
+    libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
+```
 
 > For the full list of platform requirements, see the [Tauri prerequisites docs](https://v2.tauri.app/start/prerequisites/).
 
