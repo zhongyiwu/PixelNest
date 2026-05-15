@@ -46,7 +46,7 @@ That installs the Xcode Command Line Tools, which Tauri uses to compile.
 ### 2. Clone and install
 
 ```bash
-git clone https://github.com/<your-name>/PixelNest.git
+git clone https://github.com/zhongyiwu/PixelNest.git
 cd PixelNest
 npm install
 ```
