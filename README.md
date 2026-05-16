@@ -16,7 +16,27 @@ PixelNest is a tiny pixel-art desktop pet — a draggable black cat that blinks,
 
 ---
 
-## Installation
+## Download and install
+
+For normal macOS use, download the right `.dmg` from the latest GitHub Release, open it, then drag **PixelNest** into **Applications**. After that you can launch PixelNest like any other app; no terminal is needed.
+
+- Apple Silicon Macs (M1/M2/M3/M4): download the `aarch64` DMG
+- Intel Macs: download the `x86_64` DMG
+
+If macOS says the app is from an unidentified developer, right-click **PixelNest** in Applications, choose **Open**, then confirm once. This project is not code-signed or notarized yet.
+
+## Publishing a release
+
+This repo includes a GitHub Actions release workflow. To publish downloadable DMG installers:
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+GitHub will build both macOS architectures and attach the generated DMGs to the `v0.1.0` release. You can also run the **Release** workflow manually from the GitHub Actions tab.
+
+## Development setup
 
 ### 1. Prerequisites
 
@@ -113,16 +133,21 @@ node server.js
 
 Or just open `index.html` directly in a browser.
 
-### 4. Build a release
+### 4. Build a release installer
 
 ```bash
-npm run tauri build
+npm run package:mac
 ```
 
 Output lands in `src-tauri/target/release/bundle/`:
 
-- macOS: `.app` and/or `.dmg`
-- Windows: `.msi` / `.exe` installer
+- macOS: `.app` and `.dmg`
+
+For the configured release targets in `src-tauri/tauri.conf.json`, run:
+
+```bash
+npm run package
+```
 
 ---
 

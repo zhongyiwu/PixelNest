@@ -5,11 +5,14 @@
   "type": "module",
   "scripts": {
     "generate:sprites": "node scripts/create-cat-spritesheet.js",
+    "generate:icon": "node scripts/create-icon.js",
     "dev": "vite --host 127.0.0.1 --port 1420",
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1",
     "serve": "node server.js",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "package": "tauri build",
+    "package:mac": "tauri build --bundles app,dmg"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.0.0"
