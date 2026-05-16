@@ -1,6 +1,6 @@
 [package]
 name = "pixelnest"
-version = "0.1.0"
+version = "0.1.2"
 description = "A tiny pixel desktop pet."
 authors = ["PixelNest"]
 edition = "2021"

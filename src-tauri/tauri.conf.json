@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "PixelNest",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "identifier": "com.pixelnest.pet",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -35,6 +35,9 @@
   "bundle": {
     "active": true,
     "targets": ["app", "dmg"],
-    "icon": ["icons/icon.png"]
+    "icon": ["icons/icon.png"],
+    "macOS": {
+      "signingIdentity": "-"
+    }
   }
 }
