@@ -17,19 +17,20 @@ if (isDesktopPet) {
 const phrases = ["Meow", "Mrrp", "Purr"];
 const chasePhrases = ["Gotcha!", "Zoom!", "Mine!"];
 const caughtPhrases = ["Caught!", "Okay, okay"];
-const chaseDelayMin = 60 * 60 * 1000;
-const chaseDelayMax = 2 * 60 * 60 * 1000;
+const chaseDelayMin = 30 * 60 * 1000;
+const chaseDelayMax = 60 * 60 * 1000;
 const idleWanderDelayMin = 2 * 60 * 1000;
 const idleWanderDelayMax = 5 * 60 * 1000;
 const idleWanderDistanceMin = 30;
 const idleWanderDistanceMax = 70;
 const sleepDelayMin = 10 * 60 * 1000;
 const sleepDelayMax = 20 * 60 * 1000;
-const desktopChaseStep = 42;
-const previewChaseStep = 30;
-const chaseTickMs = 42;
+const desktopChaseSpeed = (30 / 42) * 1000;
+const previewChaseSpeed = (30 / 42) * 1000;
+const chaseMaxFrameMs = 50;
 const chaseRestEnterDistance = 20;
 const chaseRestExitDistance = 44;
+const chaseRestSettleMs = 180;
 const storageKey = "pixelnest.randomChaseEnabled";
 
 const state = {
@@ -44,6 +45,7 @@ const state = {
   chaseTimer: 0,
   chaseLoop: 0,
   chaseResting: false,
+  chaseRestStartedAt: 0,
   idleWanderTimer: 0,
   sleepTimer: 0,
   behavior: "idle",
@@ -110,6 +112,9 @@ function setBehavior(nextBehavior) {
 
 function setChaseResting(isResting) {
   state.chaseResting = isResting;
+  if (!isResting) {
+    state.chaseRestStartedAt = 0;
+  }
   pet.classList.toggle("chase-resting", isResting);
 }
 
@@ -392,13 +397,26 @@ async function startChase() {
   window.clearTimeout(state.sleepTimer);
 
   const windowHandle = await getTauriWindow();
+  let lastFrameAt = performance.now();
 
-  state.chaseLoop = window.setInterval(async () => {
-    if (state.behavior !== "chase" || state.pointerId !== null) {
+  async function chaseFrame(now) {
+    if (state.behavior !== "chase") {
       return;
     }
 
+    if (state.pointerId !== null) {
+      lastFrameAt = now;
+      state.chaseLoop = window.requestAnimationFrame(chaseFrame);
+      return;
+    }
+
+    const deltaMs = Math.min(chaseMaxFrameMs, Math.max(0, now - lastFrameAt));
+    lastFrameAt = now;
     const cursor = await readCursorPosition(windowHandle);
+
+    if (state.behavior !== "chase") {
+      return;
+    }
 
     if (windowHandle && tauriPhysicalPosition) {
       const current = await getDesktopWindowPosition(windowHandle);
@@ -411,16 +429,25 @@ async function startChase() {
       const deltaX = target.x - current.x;
       const deltaY = target.y - current.y;
       const distance = Math.hypot(deltaX, deltaY);
-      const step = Math.min(desktopChaseStep, distance);
+      const step = Math.min((desktopChaseSpeed * deltaMs) / 1000, distance);
       const enterDistance = chaseRestEnterDistance * scaleFactor;
       const exitDistance = chaseRestExitDistance * scaleFactor;
 
+      if (state.behavior !== "chase") {
+        return;
+      }
+
       if (distance <= enterDistance) {
-        setChaseResting(true);
+        state.chaseRestStartedAt ||= now;
+        if (now - state.chaseRestStartedAt >= chaseRestSettleMs) {
+          setChaseResting(true);
+        }
+        state.chaseLoop = window.requestAnimationFrame(chaseFrame);
         return;
       }
 
       if (state.chaseResting && distance < exitDistance) {
+        state.chaseLoop = window.requestAnimationFrame(chaseFrame);
         return;
       }
 
@@ -431,6 +458,10 @@ async function startChase() {
         current.x + (deltaX / distance) * step,
         current.y + (deltaY / distance) * step,
       );
+      if (state.behavior !== "chase") {
+        return;
+      }
+      state.chaseLoop = window.requestAnimationFrame(chaseFrame);
       return;
     }
 
@@ -444,21 +475,29 @@ async function startChase() {
     const deltaX = target.x - rect.left;
     const deltaY = target.y - rect.top;
     const distance = Math.hypot(deltaX, deltaY);
-    const step = Math.min(previewChaseStep, distance);
+    const step = Math.min((previewChaseSpeed * deltaMs) / 1000, distance);
 
     if (distance <= chaseRestEnterDistance) {
-      setChaseResting(true);
+      state.chaseRestStartedAt ||= now;
+      if (now - state.chaseRestStartedAt >= chaseRestSettleMs) {
+        setChaseResting(true);
+      }
+      state.chaseLoop = window.requestAnimationFrame(chaseFrame);
       return;
     }
 
     if (state.chaseResting && distance < chaseRestExitDistance) {
+      state.chaseLoop = window.requestAnimationFrame(chaseFrame);
       return;
     }
 
     setChaseResting(false);
     setPetFacing(deltaX);
     movePagePetTo(rect.left + (deltaX / distance) * step, rect.top + (deltaY / distance) * step);
-  }, chaseTickMs);
+    state.chaseLoop = window.requestAnimationFrame(chaseFrame);
+  }
+
+  state.chaseLoop = window.requestAnimationFrame(chaseFrame);
 }
 
 function stopChase(wasCaught) {
@@ -466,7 +505,7 @@ function stopChase(wasCaught) {
     return;
   }
 
-  window.clearInterval(state.chaseLoop);
+  window.cancelAnimationFrame(state.chaseLoop);
   state.chaseLoop = 0;
   setBehavior(wasCaught ? "caught" : "idle");
 

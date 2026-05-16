@@ -2,20 +2,20 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 import { deflateSync } from "node:zlib";
 
-const frame = 64;
+const frame = 80;
 const frames = 11;
 const width = frame * frames;
 const height = frame;
 const pixels = Buffer.alloc(width * height * 4);
 
-const colors = {
-  black: [22, 22, 30, 255],
-  dark: [14, 14, 18, 255],
-  shade: [32, 32, 42, 255],
+const c = {
+  outline: [10, 10, 14, 255],
+  black: [20, 20, 28, 255],
+  shade: [34, 34, 45, 255],
+  soft: [45, 45, 58, 255],
   eye: [141, 255, 135, 255],
-  nose: [47, 34, 39, 255],
-  heart: [255, 107, 156, 255],
-  shadow: [0, 0, 0, 40],
+  nose: [55, 38, 45, 255],
+  shadow: [0, 0, 0, 42],
 };
 
 function px(x, y, color) {
@@ -27,169 +27,176 @@ function px(x, y, color) {
   pixels[index + 3] = color[3];
 }
 
-function rect(frameIndex, x, y, w, h, color) {
-  const offset = frameIndex * frame;
+function rect(i, x, y, w, h, color) {
+  const ox = i * frame;
   for (let yy = y; yy < y + h; yy += 1) {
     for (let xx = x; xx < x + w; xx += 1) {
-      px(offset + xx, yy, color);
+      px(ox + xx, yy, color);
     }
   }
 }
 
-function shadow(i, y = 55) {
-  rect(i, 16, y, 34, 3, colors.shadow);
-  rect(i, 20, y - 2, 26, 3, colors.shadow);
+function shadow(i, y = 69, x = 18, w = 44) {
+  rect(i, x, y, w, 4, c.shadow);
+  rect(i, x + 5, y - 2, w - 10, 3, c.shadow);
 }
 
-function frontCat(i, options = {}) {
-  const blink = Boolean(options.blink);
-  const tailOffset = options.tailOffset ?? 0;
+function frontCat(i, { blink = false, sleepy = false, tail = 0 } = {}) {
   shadow(i);
 
-  rect(i, 49, 30 + tailOffset, 4, 4, colors.dark);
-  rect(i, 53, 26 + tailOffset, 4, 4, colors.dark);
-  rect(i, 56, 22 + tailOffset, 4, 4, colors.black);
-  rect(i, 55, 18 + tailOffset, 4, 4, colors.black);
-  rect(i, 51, 15 + tailOffset, 5, 4, colors.black);
+  rect(i, 58, 38 + tail, 5, 5, c.outline);
+  rect(i, 63, 34 + tail, 5, 5, c.outline);
+  rect(i, 66, 29 + tail, 5, 5, c.black);
+  rect(i, 64, 24 + tail, 5, 5, c.black);
+  rect(i, 58, 20 + tail, 7, 5, c.black);
+  rect(i, 59, 22 + tail, 4, 3, c.soft);
 
-  rect(i, 20, 28, 24, 4, colors.black);
-  rect(i, 16, 32, 32, 16, colors.black);
-  rect(i, 20, 48, 24, 4, colors.black);
-  rect(i, 20, 32, 24, 16, colors.shade);
-  rect(i, 18, 50, 8, 4, colors.dark);
-  rect(i, 38, 50, 8, 4, colors.dark);
+  rect(i, 25, 37, 30, 5, c.outline);
+  rect(i, 20, 42, 40, 18, c.outline);
+  rect(i, 25, 60, 30, 5, c.outline);
+  rect(i, 26, 43, 28, 17, c.black);
+  rect(i, 31, 43, 20, 15, c.shade);
+  rect(i, 22, 62, 10, 5, c.outline);
+  rect(i, 48, 62, 10, 5, c.outline);
+  rect(i, 25, 62, 7, 3, c.soft);
+  rect(i, 48, 62, 7, 3, c.soft);
 
-  rect(i, 18, 18, 4, 4, colors.dark);
-  rect(i, 22, 14, 4, 4, colors.black);
-  rect(i, 26, 18, 4, 4, colors.black);
-  rect(i, 38, 18, 4, 4, colors.black);
-  rect(i, 42, 14, 4, 4, colors.black);
-  rect(i, 46, 18, 4, 4, colors.dark);
-  rect(i, 20, 22, 28, 4, colors.black);
-  rect(i, 16, 26, 36, 16, colors.black);
-  rect(i, 20, 42, 28, 4, colors.black);
-  rect(i, 20, 26, 28, 16, colors.shade);
+  rect(i, 20, 22, 6, 6, c.outline);
+  rect(i, 26, 16, 6, 6, c.black);
+  rect(i, 32, 22, 6, 6, c.black);
+  rect(i, 46, 22, 6, 6, c.black);
+  rect(i, 52, 16, 6, 6, c.black);
+  rect(i, 58, 22, 6, 6, c.outline);
+  rect(i, 25, 27, 34, 5, c.outline);
+  rect(i, 20, 32, 44, 20, c.outline);
+  rect(i, 25, 52, 34, 5, c.outline);
+  rect(i, 26, 33, 32, 18, c.black);
+  rect(i, 31, 33, 22, 16, c.shade);
+  rect(i, 26, 23, 4, 4, c.soft);
+  rect(i, 54, 23, 4, 4, c.soft);
 
-  if (blink) {
-    rect(i, 24, 34, 4, 1, colors.eye);
-    rect(i, 40, 34, 4, 1, colors.eye);
+  if (blink || sleepy) {
+    rect(i, 29, 42, 7, 2, c.eye);
+    rect(i, 48, 42, 7, 2, c.eye);
   } else {
-    rect(i, 24, 32, 4, 4, colors.eye);
-    rect(i, 40, 32, 4, 4, colors.eye);
+    rect(i, 29, 39, 6, 6, c.eye);
+    rect(i, 49, 39, 6, 6, c.eye);
+    rect(i, 32, 39, 2, 2, c.soft);
+    rect(i, 52, 39, 2, 2, c.soft);
   }
 
-  rect(i, 32, 38, 4, 4, colors.nose);
-  rect(i, 28, 42, 4, 2, colors.dark);
-  rect(i, 36, 42, 4, 2, colors.dark);
+  rect(i, 39, 48, 5, 4, c.nose);
+  rect(i, 34, 53, 4, 2, c.outline);
+  rect(i, 46, 53, 4, 2, c.outline);
 }
 
 function sideCat(i, pose) {
   const run = pose.startsWith("run");
   const bob = pose === "run-b" ? -2 : pose === "run-c" ? 1 : 0;
   const stretch = pose === "run-a";
-  shadow(i, run ? 56 : 55);
+  shadow(i, run ? 70 : 69, 14, run ? 52 : 48);
 
-  rect(i, 11, 39 + bob, 8, 4, colors.dark);
-  rect(i, 7, 35 + bob, 8, 4, colors.dark);
-  rect(i, 5, 31 + bob, 6, 4, colors.black);
-  rect(i, 8, 27 + bob, 7, 4, colors.black);
+  rect(i, 14, 50 + bob, 11, 5, c.outline);
+  rect(i, 9, 45 + bob, 10, 5, c.outline);
+  rect(i, 6, 40 + bob, 8, 5, c.black);
+  rect(i, 10, 35 + bob, 8, 5, c.black);
+  rect(i, 11, 36 + bob, 5, 3, c.soft);
 
-  rect(i, stretch ? 17 : 18, 35 + bob, stretch ? 28 : 25, 4, colors.black);
-  rect(i, 14, 39 + bob, stretch ? 36 : 33, 8, colors.black);
-  rect(i, 18, 47 + bob, stretch ? 26 : 24, 4, colors.black);
-  rect(i, 22, 39 + bob, 20, 8, colors.shade);
+  rect(i, stretch ? 22 : 23, 42 + bob, stretch ? 36 : 32, 5, c.outline);
+  rect(i, 17, 47 + bob, stretch ? 47 : 43, 11, c.outline);
+  rect(i, 22, 58 + bob, stretch ? 34 : 31, 5, c.outline);
+  rect(i, 25, 48 + bob, 27, 9, c.black);
+  rect(i, 30, 48 + bob, 18, 8, c.shade);
 
-  rect(i, 43, 27 + bob, 4, 4, colors.black);
-  rect(i, 47, 23 + bob, 4, 4, colors.black);
-  rect(i, 51, 27 + bob, 4, 4, colors.dark);
-  rect(i, 39, 31 + bob, 18, 4, colors.black);
-  rect(i, 37, 35 + bob, 22, 12, colors.black);
-  rect(i, 41, 47 + bob, 14, 4, colors.black);
-  rect(i, 41, 35 + bob, 16, 10, colors.shade);
-  rect(i, 51, 38 + bob, 4, 4, colors.eye);
-  rect(i, 57, 41 + bob, 3, 3, colors.nose);
+  rect(i, 54, 30 + bob, 5, 5, c.black);
+  rect(i, 59, 25 + bob, 5, 5, c.black);
+  rect(i, 64, 30 + bob, 5, 5, c.outline);
+  rect(i, 48, 35 + bob, 22, 5, c.outline);
+  rect(i, 46, 40 + bob, 27, 16, c.outline);
+  rect(i, 51, 56 + bob, 17, 5, c.outline);
+  rect(i, 51, 41 + bob, 19, 13, c.black);
+  rect(i, 55, 41 + bob, 13, 11, c.shade);
+  rect(i, 64, 45 + bob, 5, 5, c.eye);
+  rect(i, 71, 49 + bob, 3, 3, c.nose);
 
   if (pose === "walk-a") {
-    rect(i, 19, 50, 8, 4, colors.dark);
-    rect(i, 38, 50, 8, 4, colors.dark);
-    rect(i, 27, 53, 8, 4, colors.black);
-    rect(i, 45, 53, 8, 4, colors.black);
+    rect(i, 23, 62, 11, 5, c.outline);
+    rect(i, 49, 62, 11, 5, c.outline);
+    rect(i, 34, 66, 11, 4, c.black);
+    rect(i, 57, 66, 11, 4, c.black);
   } else if (pose === "walk-b") {
-    rect(i, 17, 53, 9, 4, colors.dark);
-    rect(i, 40, 53, 9, 4, colors.dark);
-    rect(i, 27, 50, 8, 4, colors.black);
-    rect(i, 44, 50, 8, 4, colors.black);
+    rect(i, 21, 66, 12, 4, c.outline);
+    rect(i, 51, 66, 12, 4, c.outline);
+    rect(i, 35, 62, 10, 5, c.black);
+    rect(i, 56, 62, 10, 5, c.black);
   } else if (pose === "run-a") {
-    rect(i, 16, 53, 12, 4, colors.dark);
-    rect(i, 39, 50, 11, 4, colors.dark);
-    rect(i, 27, 50, 11, 4, colors.black);
-    rect(i, 45, 54, 10, 3, colors.black);
+    rect(i, 20, 66, 15, 4, c.outline);
+    rect(i, 50, 62, 14, 5, c.outline);
+    rect(i, 34, 62, 14, 5, c.black);
+    rect(i, 59, 68, 12, 3, c.black);
   } else if (pose === "run-b") {
-    rect(i, 20, 50, 8, 4, colors.dark);
-    rect(i, 36, 53, 12, 4, colors.dark);
-    rect(i, 29, 54, 8, 3, colors.black);
-    rect(i, 44, 50, 10, 4, colors.black);
+    rect(i, 25, 62, 11, 5, c.outline);
+    rect(i, 47, 66, 15, 4, c.outline);
+    rect(i, 37, 68, 10, 3, c.black);
+    rect(i, 58, 62, 12, 5, c.black);
   } else {
-    rect(i, 21, 52, 7, 4, colors.dark);
-    rect(i, 37, 52, 7, 4, colors.dark);
-    rect(i, 28, 52, 7, 4, colors.black);
-    rect(i, 44, 52, 7, 4, colors.black);
+    rect(i, 26, 65, 9, 4, c.outline);
+    rect(i, 47, 65, 9, 4, c.outline);
+    rect(i, 36, 65, 9, 4, c.black);
+    rect(i, 57, 65, 9, 4, c.black);
   }
 }
 
 function caughtCat(i) {
-  shadow(i, 57);
-  rect(i, 16, 36, 33, 14, colors.black);
-  rect(i, 20, 39, 25, 9, colors.shade);
-  rect(i, 18, 50, 27, 4, colors.black);
-  rect(i, 15, 30, 4, 4, colors.dark);
-  rect(i, 19, 26, 5, 4, colors.black);
-  rect(i, 24, 30, 5, 4, colors.black);
-  rect(i, 37, 30, 5, 4, colors.black);
-  rect(i, 42, 26, 5, 4, colors.black);
-  rect(i, 47, 30, 4, 4, colors.dark);
-  rect(i, 18, 34, 32, 12, colors.black);
-  rect(i, 22, 35, 24, 8, colors.shade);
-  rect(i, 24, 38, 5, 2, colors.eye);
-  rect(i, 39, 38, 5, 2, colors.eye);
-  rect(i, 32, 42, 4, 3, colors.nose);
+  shadow(i, 70);
+  rect(i, 18, 45, 43, 17, c.outline);
+  rect(i, 24, 49, 31, 11, c.shade);
+  rect(i, 22, 62, 34, 5, c.outline);
+  rect(i, 18, 36, 5, 5, c.outline);
+  rect(i, 23, 31, 6, 5, c.black);
+  rect(i, 29, 36, 6, 5, c.black);
+  rect(i, 45, 36, 6, 5, c.black);
+  rect(i, 51, 31, 6, 5, c.black);
+  rect(i, 57, 36, 5, 5, c.outline);
+  rect(i, 21, 41, 40, 15, c.outline);
+  rect(i, 27, 42, 28, 11, c.shade);
+  rect(i, 29, 48, 7, 2, c.eye);
+  rect(i, 47, 48, 7, 2, c.eye);
+  rect(i, 39, 53, 5, 3, c.nose);
 }
 
-function sleepCat(i, options = {}) {
-  const breath = options.breath ?? 0;
-  shadow(i, 58);
+function sleepCat(i, { breath = 0 } = {}) {
+  shadow(i, 72);
 
-  rect(i, 16, 40 + breath, 34, 4, colors.black);
-  rect(i, 12, 44 + breath, 42, 8, colors.black);
-  rect(i, 16, 52 + breath, 34, 4, colors.black);
-  rect(i, 20, 44 + breath, 26, 7, colors.shade);
+  rect(i, 18, 50 + breath, 44, 5, c.outline);
+  rect(i, 14, 55 + breath, 52, 10, c.outline);
+  rect(i, 19, 65 + breath, 42, 5, c.outline);
+  rect(i, 24, 56 + breath, 32, 8, c.shade);
+  rect(i, 60, 57 + breath, 8, 5, c.outline);
+  rect(i, 66, 52 + breath, 5, 5, c.black);
 
-  rect(i, 48, 46 + breath, 7, 4, colors.dark);
-  rect(i, 53, 42 + breath, 5, 4, colors.dark);
-  rect(i, 55, 38 + breath, 4, 4, colors.black);
-
-  rect(i, 18, 27 + breath, 4, 4, colors.dark);
-  rect(i, 22, 23 + breath, 4, 4, colors.black);
-  rect(i, 26, 27 + breath, 4, 4, colors.black);
-  rect(i, 38, 27 + breath, 4, 4, colors.black);
-  rect(i, 42, 23 + breath, 4, 4, colors.black);
-  rect(i, 46, 27 + breath, 4, 4, colors.dark);
-  rect(i, 20, 31 + breath, 28, 4, colors.black);
-  rect(i, 16, 35 + breath, 36, 12, colors.black);
-  rect(i, 20, 47 + breath, 28, 4, colors.black);
-  rect(i, 20, 35 + breath, 28, 11, colors.shade);
-  rect(i, 24, 40 + breath, 5, 1, colors.eye);
-  rect(i, 39, 40 + breath, 5, 1, colors.eye);
-  rect(i, 32, 43 + breath, 4, 3, colors.nose);
-
-  rect(i, 22, 49 + breath, 12, 3, colors.dark);
-  rect(i, 34, 49 + breath, 12, 3, colors.dark);
-  rect(i, 26, 48 + breath, 8, 2, colors.black);
-  rect(i, 34, 48 + breath, 8, 2, colors.black);
+  rect(i, 20, 35 + breath, 6, 6, c.outline);
+  rect(i, 26, 29 + breath, 6, 6, c.black);
+  rect(i, 32, 35 + breath, 6, 6, c.black);
+  rect(i, 46, 35 + breath, 6, 6, c.black);
+  rect(i, 52, 29 + breath, 6, 6, c.black);
+  rect(i, 58, 35 + breath, 6, 6, c.outline);
+  rect(i, 25, 40 + breath, 34, 5, c.outline);
+  rect(i, 20, 45 + breath, 44, 16, c.outline);
+  rect(i, 25, 61 + breath, 34, 5, c.outline);
+  rect(i, 26, 46 + breath, 32, 13, c.black);
+  rect(i, 31, 46 + breath, 22, 11, c.shade);
+  rect(i, 29, 53 + breath, 7, 2, c.eye);
+  rect(i, 48, 53 + breath, 7, 2, c.eye);
+  rect(i, 39, 56 + breath, 5, 3, c.nose);
+  rect(i, 25, 64 + breath, 16, 4, c.outline);
+  rect(i, 43, 64 + breath, 16, 4, c.outline);
+  rect(i, 31, 62 + breath, 9, 3, c.black);
+  rect(i, 43, 62 + breath, 9, 3, c.black);
 }
 
-frontCat(0, { tailOffset: 0 });
-frontCat(1, { tailOffset: 1 });
+frontCat(0, { tail: 0 });
+frontCat(1, { tail: 1 });
 frontCat(2, { blink: true });
 sideCat(3, "walk-a");
 sideCat(4, "walk-b");
